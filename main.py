@@ -4,10 +4,10 @@ import datetime
 import sys
 
 TICKER_URL = "https://www.binance.com/api/v3/ticker/bookTicker"
-START_COIN = sys.argv[1]      # Стартовая валюта
+START_COIN = sys.argv[1]    # Стартовая валюта
 START_SCORE = 4000
 MAX_PART_OF_CHAIN = 3       # Колличество сделок
-PROFIT_COEF = 1.02          # Минимальный подходящий коэфициент
+PROFIT_COEF = 1.01          # Минимальный подходящий коэфициент
 
 with open('parameters/symbols.json') as file:
     SYMBOLS_DICT = json.loads(file.read())
@@ -28,14 +28,14 @@ def get_next_score(symbol, previous_score, coin):
     for item in all_prices:
         if item['symbol'] == symbol:
             ask_price = float(item['askPrice'])
-            bit_price = float(item['bitPrice'])
-            if ask_price == 0 or bit_price == 0:
+            bid_price = float(item['bidPrice'])
+            if ask_price == 0 or bid_price == 0:
                 return None
             else:
                 if SYMBOLS_DICT[symbol]['quoteAsset'] == coin:
                     return previous_score / ask_price
                 else:
-                    return previous_score * bit_price
+                    return previous_score * bid_price
 
 
 
