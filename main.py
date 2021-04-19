@@ -1,9 +1,10 @@
 import requests
 import json
 import datetime
+import sys
 
 TICKER_URL = "https://www.binance.com/api/v3/ticker/bookTicker"
-START_COIN = 'BUSD'        # Стартовая валюта
+START_COIN = sys.argv[1]      # Стартовая валюта
 START_SCORE = 4000
 MAX_PART_OF_CHAIN = 3       # Колличество сделок
 PROFIT_COEF = 1.02          # Минимальный подходящий коэфициент
