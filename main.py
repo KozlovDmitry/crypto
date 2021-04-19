@@ -27,14 +27,15 @@ def get_available_symbols(list_used_symbols, coin):
 def get_next_score(symbol, previous_score, coin):
     for item in all_prices:
         if item['symbol'] == symbol:
-            rate = float(item['askPrice'])
-            if rate == 0:
+            ask_price = float(item['askPrice'])
+            bit_price = float(item['bitPrice'])
+            if ask_price == 0 or bit_price == 0:
                 return None
             else:
                 if SYMBOLS_DICT[symbol]['quoteAsset'] == coin:
-                    return previous_score / rate
+                    return previous_score / ask_price
                 else:
-                    return previous_score * rate
+                    return previous_score * bit_price
 
 
 
