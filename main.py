@@ -3,23 +3,23 @@ import json
 import datetime
 
 TICKER_URL = "https://www.binance.com/api/v3/ticker/bookTicker"
-START_COIN = 'BUSD'         # Стартовая валюта
+START_COIN = 'BUSD'        # Стартовая валюта
 START_SCORE = 4000
 MAX_PART_OF_CHAIN = 3       # Колличество сделок
 PROFIT_COEF = 1.02          # Минимальный подходящий коэфициент
 
 with open('parameters/symbols.json') as file:
     SYMBOLS_DICT = json.loads(file.read())
-    START_CHAIN_LIST = [symbol for symbol, coins in SYMBOLS_DICT.items() if coins['master'] == START_COIN]
+    START_CHAIN_LIST = [symbol for symbol, coins in SYMBOLS_DICT.items() if coins['quoteAsset'] == START_COIN]
 
 
 def get_next_coin(symbol, previous_coin):
-    return SYMBOLS_DICT[symbol]['slave'] if previous_coin == SYMBOLS_DICT[symbol]['master'] else SYMBOLS_DICT[symbol]['master']
+    return SYMBOLS_DICT[symbol]['baseAsset'] if previous_coin == SYMBOLS_DICT[symbol]['quoteAsset'] else SYMBOLS_DICT[symbol]['quoteAsset']
 
 
 def get_available_symbols(list_used_symbols, coin):
     return [symbol for symbol, coins in SYMBOLS_DICT.items()
-            if (coin in [coins['master'], coins['slave']]) and
+            if (coin in [coins['quoteAsset'], coins['baseAsset']]) and
             (symbol not in list_used_symbols)]
 
 
@@ -30,7 +30,7 @@ def get_next_score(symbol, previous_score, coin):
             if rate == 0:
                 return None
             else:
-                if SYMBOLS_DICT[symbol]['master'] == coin:
+                if SYMBOLS_DICT[symbol]['quoteAsset'] == coin:
                     return previous_score / rate
                 else:
                     return previous_score * rate
@@ -54,11 +54,11 @@ def chain_finder(list_used_symbols, coin, current_score):
             result_chain = '->'.join(list_used_symbols)
             with open('logs/result.txt', 'a') as file:
                 file.write(f'{datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")}   {result_chain}  Coef - {coef}\n')
-            if len(top_5_deals) <= 5 and result_chain not in top_5_deals:
-                top_5_deals[result_chain] = coef
-            elif result_chain in top_5_deals:
-                if float(top_5_deals[result_chain]) < coef:
-                    top_5_deals[result_chain] = coef
+            if result_chain not in top_deals_by_symbol:
+                top_deals_by_symbol[result_chain] = coef
+            elif result_chain in top_deals_by_symbol:
+                if float(top_deals_by_symbol[result_chain]) < coef:
+                    top_deals_by_symbol[result_chain] = coef
         return None
 
 
@@ -71,7 +71,7 @@ def chain_finder(list_used_symbols, coin, current_score):
                 list_used_symbols.pop()
 
 
-top_5_deals = dict()
+top_deals_by_symbol = dict()
 while(True):
     start_time = datetime.datetime.now()
     try:
@@ -83,8 +83,8 @@ while(True):
         if item['symbol'] in START_CHAIN_LIST:
             chain_finder([item['symbol']], START_COIN, START_SCORE)
 
-    with open('logs/top_5_result_by_session.txt', 'w') as file:
-        for chain, coef in top_5_deals.items():
+    with open('logs/top_deals_by_symbol.txt', 'w') as file:
+        for chain, coef in top_deals_by_symbol.items():
             file.write(f"{chain} - {coef}\n")
     end_time = datetime.datetime.now()
     print(f"Transaction time = {end_time - start_time}s")
